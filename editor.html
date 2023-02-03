@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="cache-control" content="no-cache">
+
+    <title>Редактор НС</title>
+
+    <script src="assets/vue/vue.js"></script>
+    <script src="assets/axios/axios.min.js"></script>
+    <script src="assets/bootstrap-5.0.1-dist/js/bootstrap.js"></script>
+    <link href="assets/bootstrap-5.0.1-dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/bootstrap-icons-1.3.0/bootstrap-icons.css" rel="stylesheet">
+
+    <script src="assets/jquery/jquery-3.3.1.js"></script>
+    <script src="assets/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="assets/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ru.min.js"></script>
+    <link rel="stylesheet" href="assets/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" />
+    <link rel="shortcut icon" type="image/png" href="logo_ns.png">
+
+</head>
+
+<body>
+    <div id="App" class="container">
+
+
+        <nav class="navbar navbar-expand-sm navbar-dark fixed-top bg-secondary container-fluid">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="index.html">
+                    <img src="logo_ns.png" width="30" height="30" class="d-inline-block align-top" alt=""> Редактор НС
+                </a>
+
+
+                <div class="input-group">
+                    <div class="collapse navbar-collapse"></div>
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                        <button class="btn btn-primary bi bi-save" @click="saveCasualty()"> Сохранить</button>
+                        <button class="btn btn-danger bi bi-trash" data-bs-toggle="modal" data-bs-target="#deleteModalCasualty" v-if="isAdmin"> Удалить</button>
+                        <button class="btn btn-secondary bi bi-arrow-clockwise" @click="loadData();loadCasualty(casualty_id)"> Отменить</button>
+                        <a class="btn btn-secondary bi bi-house " href="index.html "> Вернуться</a>
+                    </div>
+                    &nbsp;
+                    <strong class="text-white-50">{{login.user}}:</strong>
+                    <span class="text-white-50">{{login.role}}</span>
+
+                </div>
+
+        </nav>
+
+        <p class="row">&nbsp;</i>
+        </p>
+        <p class="row">&nbsp;</i>
+        </p>
+
+        <article class="row " v-if="isAccess">
+
+            <div class="row g-1">
+                <button class="col-md-1 btn btn-outline-secondary" :disabled="casualty_id==1" @click="loadCasualty(casualty_id, -1)"><i class="bi bi-chevron-double-left"></i> Назад</button>
+                <div class="col-md-10"></div>
+                <button class="col-md-1 btn btn-outline-secondary" @click="loadCasualty(casualty_id, 1)">Вперед <i class="bi bi-chevron-double-right"></i></button>
+            </div>
+
+            <div class="row g-1">
+                <div class="form-floating col-md-1">
+                    <input disabled type="text" class="form-control" id="floatingInputGrid" placeholder="name@example.com" :value="ca.id">
+                    <label for="floatingInputGrid"> #</label>
+                </div>
+                <div class="form-floating col-md-2">
+                    <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.region_id">
+                            <option v-for="(row, key) in db.region" :value="row.id" >{{row.region_name}}</option>
+                        </select>
+                    <label for="floatingSelectGrid">Площадка</label>
+                </div>
+                <div class="form-floating col-md-3">
+                    <input type="datetime-local" class="form-control" v-model="ca.dt">
+                    <!-- <input type="email" class="form-control" id="floatingInputGrid" placeholder="name@example.com" value="mdo@example.com"> -->
+                    <label for="floatingInputGrid">Дата, время</label>
+                </div>
+                <div class="form-floating col-md-3">
+                    <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.mine_id">
+                            <option v-for="(row, key) in db.mine" :value="row.id" >{{row.mine_name}}</option>
+                        </select>
+                    <label for="floatingSelectGrid">Предприятие</label>
+                </div>
+                <div class="btn-group col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.area_id">
+                            <option v-for="(row, key) in db.area" :value="row.id" >{{row.area_name}}</option>
+                        </select>
+                        <label for="floatingSelectGrid">Участок</label>
+                    </div>
+                    <button v-if="isAdmin" type="button" class="btn btn-outline-secondary bi bi-plus-square" data-bs-toggle="modal" data-bs-target="#addRefItemModal" @click="setEditRef('area', 'Участок')"></button>
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <div class="btn-group col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.area_dir_id">
+                            <option v-for="(row, key) in db.area_dir" :value="row.id" >{{row.area_dir_name}}</option>
+                        </select>
+                        <label for="floatingSelectGrid">Направление участка</label>
+                    </div>
+                    <button v-if="isAdmin" type="button" class="btn btn-outline-secondary bi bi-plus-square" data-bs-toggle="modal" data-bs-target="#addRefItemModal" @click="setEditRef('area_dir', 'Направление участка')"></button>
+                </div>
+                <div class="form-floating col-md-3">
+                    <input type="email" class="form-control" id="floatingInputGrid" placeholder="name@example.com" v-model="ca.full_name">
+                    <label for="floatingSelectGrid">ФИО пострадавшего</label>
+                </div>
+                <div class="btn-group col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.prof_id">
+                            <option v-for="(row, key) in db.prof" :value="row.id" >{{row.prof_name}}</option>
+                        </select>
+                        <label for="floatingSelectGrid">Профессия</label>
+                    </div>
+                    <button v-if="isAdmin" type="button" class="btn btn-outline-secondary bi bi-plus-square" data-bs-toggle="modal" data-bs-target="#addRefItemModal" @click="setEditRef('prof', 'Профессия')"></button>
+                </div>
+                <div class="form-floating col-md-3">
+                    <input type="email" class="form-control" id="floatingInputGrid" placeholder="name@example.com" v-model="ca.birth_year">
+                    <label for="floatingSelectGrid">Год рождения</label>
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <div class="form-floating col-md-3">
+                    <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.mining_flag_id">
+                        <option v-for="(row, key) in db.mining_flag" :value="row.id" >{{row.mining_flag_name}}</option>
+                    </select>
+                    <label for="floatingSelectGrid">Горные выработки</label>
+                </div>
+                <div class="btn-group col-md-3">
+                    <div class="form-floating">
+                        <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.place_id">
+                            <option v-for="(row, key) in db.place" :value="row.id" >{{row.place_name}}</option>
+                        </select>
+                        <label for="floatingSelectGrid">Место НС</label>
+                    </div>
+                    <button v-if="isAdmin" type="button" class="btn btn-outline-secondary bi bi-plus-square" data-bs-toggle="modal" data-bs-target="#addRefItemModal" @click="setEditRef('place', 'Место НС')"></button>
+                </div>
+                <div class="form-floating col-md-6">
+                    <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.body_part_id">
+                            <option v-for="(row, key) in db.body_part" :value="row.id" >{{row.body_part_name}}</option>
+                        </select>
+                    <label for="floatingSelectGrid">Часть тела</label>
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-md form-floating" style="height:150px">
+                    <textarea class="form-control" v-model="ca.desc_text" style="height:150px"></textarea>
+                    <label for="floatingSelectGrid ">Описание</label>
+                </div>
+                <div class="col-md form-floating ">
+                    <textarea class="form-control" v-model="ca.diagnos_text" style="height:150px"></textarea>
+                    <label for="floatingSelectGrid ">Диагноз</label>
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <div class="form-floating col-md-2">
+                    <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.degree_id">
+                            <option v-for="(row, key) in db.degree" :value="row.id" >{{row.degree_name}}</option>
+                        </select>
+                    <label for="floatingSelectGrid">Степень тяжести</label>
+                </div>
+                <div class="form-floating col-md-2">
+                    <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.relation_flag_id">
+                            <option v-for="(row, key) in db.relation_flag" :value="row.id" >{{row.relation_flag_name}}</option>
+                        </select>
+                    <label for="floatingSelectGrid">Отношение</label>
+                </div>
+                <div class="form-floating col-md-2">
+                    <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.group_flag">
+                            <option value="0" >НЕТ</option>
+                            <option value="1" >ДА</option>
+                        </select>
+                    <label for="floatingSelectGrid">Групповой</label>
+                </div>
+                <div class="form-floating col-md-2">
+                    <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.prod_flag">
+                            <option value="0" >НС связан с производством</option>
+                            <option value="1" >НС не связан с производством</option>
+                        </select>
+                    <label for="floatingSelectGrid">Отношение</label>
+                </div>
+                <div class="form-floating col-md-2">
+                    <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.end_flag">
+                            <option value="0" >НЕТ</option>
+                            <option value="1" >ДА</option>
+                        </select>
+                    <label for="floatingSelectGrid">Расследован</label>
+                </div>
+                <div class="form-floating col-md-2">
+                    <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.at_request_flag">
+                            <option value="0" >НЕТ</option>
+                            <option value="1" >ДА</option>
+                        </select>
+                    <label for="floatingSelectGrid">По заявлению</label>
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <div class="btn-group col-md-6">
+                    <div class="form-floating">
+                        <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.process_id">
+                            <option v-for="(row, key) in db.process" :value="row.id" >{{row.process_name}}</option>
+                        </select>
+                        <label for="floatingSelectGrid">Процесс</label>
+                    </div>
+                    <button v-if="isAdmin" type="button" class="btn btn-outline-secondary bi bi-plus-square" data-bs-toggle="modal" data-bs-target="#addRefItemModal" @click="setEditRef('process', 'Процесс')"></button>
+                </div>
+
+                <div class="btn-group col-md-6">
+                    <div class="form-floating">
+                        <select class="form-select" id="floatingSelectGrid" aria-label="Floating label select example" v-model="ca.event_id">
+                            <option v-for="(row, key) in db.event" :value="row.id" >{{row.event_name}}</option>
+                        </select>
+                        <label for="floatingSelectGrid">Событие</label>
+                    </div>
+                    <button v-if="isAdmin" type="button" class="btn btn-outline-secondary bi bi-plus-square" data-bs-toggle="modal" data-bs-target="#addRefItemModal" @click="setEditRef('event', 'Событие')"></button>
+                </div>
+
+            </div>
+            <div v-if="ca.flash_mine_name!='noflash'" class="row g-1">
+
+                <div class="row g-1">
+                    <div class="form-floating col-md-6">
+                        <input disabled type="text" class="form-control" id="floatingInputGrid" placeholder="name@example.com" :value="ca.flash_mine_name">
+                        <label for="floatingInputGrid"> Предприятие (Flash)</label>
+                    </div>
+                    <div class="form-floating col-md-6">
+                        <input disabled type="text" class="form-control" id="floatingInputGrid" placeholder="name@example.com" :value="ca.flash_area_name">
+                        <label for="floatingInputGrid"> Участок (Flash)</label>
+                    </div>
+                </div>
+                <div class="row g-1">
+                    <div class="form-floating col-md-6">
+                        <input disabled type="text" class="form-control" id="floatingInputGrid" placeholder="name@example.com" :value="ca.flash_process_name">
+                        <label for="floatingInputGrid"> Процесс (Flash)</label>
+                    </div>
+                    <div class="form-floating col-md-6">
+                        <input disabled type="text" class="form-control" id="floatingInputGrid" placeholder="name@example.com" :value="ca.flash_risk_name">
+                        <label for="floatingInputGrid"> Риск (Flash)</label>
+                    </div>
+                </div>
+            </div>
+            <p></p>
+            <hr>
+            <div class="row g-2">
+                <div class="btn-group col-md-6">
+                    <button type="button" class="btn btn-outline-secondary bi bi-upload" data-bs-toggle="modal" data-bs-target="#modalUpload" @click="setUploadDir('act')"> Акт Н-1</button>
+                </div>
+
+                <div class="btn-group col-md-6">
+                    <button type="button" class="btn btn-outline-secondary bi bi-upload" data-bs-toggle="modal" data-bs-target="#modalUpload" @click="setUploadDir('other')"> Прочие материалы</button>
+                </div>
+            </div>
+            <div class="row g-2">
+                <ul class="col-md-6 list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-start" v-for="(row, key) in file_act">
+                        {{row}}
+                        <div class="btn-group" role="group" aria-label="Basic example">
+                            <a class="btn btn-secondary bi bi-download" download :href="'files/'+ca.id+'/act/' + row"></a>
+                            <button class="btn btn-danger bi bi-trash" data-bs-toggle="modal" data-bs-target="#deleteModal" @click="delete_file='files/'+ca.id+'/act/' + row"></button>
+                        </div>
+
+                    </li>
+                </ul>
+                <ul class="col-md-6 list-group list-group-flush">
+                    <li class="list-group-item  d-flex justify-content-between align-items-start" v-for="(row, key) in file_other">
+                        {{row}}
+                        <div class="btn-group" role="group" aria-label="Basic example">
+                            <a class="btn btn-secondary bi bi-download" download :href="'files/'+ca.id+'/other/' + row"></a>
+                            <button class="btn btn-danger bi bi-trash" data-bs-toggle="modal" data-bs-target="#deleteModal" @click="delete_file='files/'+ca.id+'/other/' + row"></button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Modal удалить -->
+            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">Удалить файл:</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <h5>{{delete_file}}</h5>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="deleteFile(delete_file)">Удалить</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Modal upload-->
+            <!-- <div class="modal fade" id="modalUpload" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true"> -->
+            <div class="modal fade" id="modalUpload" tabindex="-1" aria-labelledby="modalUploadLabeld" aria-hidden="true">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Загрузка файла данных</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="cancelUpload()"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div v-if="uploadFileProgress != 0">
+                                <div class="progress" style="height: 40px">
+                                    <div class="progress-bar" role="progressbar" :style="{ width: uploadFileProgress + '%'}">
+                                        {{ uploadFileData.name }} {{ uploadFileProgress }}%
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="uploadResult=='OK'" class="alert alert-success" role="alert">
+                                Успешно. {{ uploadMessage }}
+                            </div>
+                            <div v-if="uploadResult=='ERROR'" class="alert alert-danger" role="alert">
+                                Ошибка. {{ uploadMessage }}
+                            </div>
+                            <p></p>
+                            <div class="input-group">
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="customFile" @change="fileInputChange()">
+                                    <button class="btn btn-outline-secondary" v-if="isNewUploadFile" @click="uploadFile()">Загрузить</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="cancelUpload()">Закрыть</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal добавить пострадавшего -->
+            <div class="modal fade" id="addPersonModal" tabindex="-1" aria-labelledby="addPersonModalLabel" aria-hidden="true">
+                <div class="modal-dialog ">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addPersonModalLabel">Добавить пострадавшего</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-2">
+                                <label class="form-label">ФИО</label>
+                                <input type="text" class="form-control" v-model='full_name'>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Год рождения</label>
+                                <input type="text" class="form-control" v-model="birth_year">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="addPerson()">Добавить</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal редактор справочника -->
+            <div class="modal fade" id="addRefItemModal" tabindex="-1" aria-labelledby="editRefItemModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editRefItemModalLabel">Редактор справочника: `{{ref_name_rus}}`</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-check" v-for="(row, key) in ref_table">
+                                <input class="form-check-input" type="checkbox" :value="row" v-model="ref_list">{{row.item_name}}</input>
+                            </div>
+                        </div>
+                        <!-- <div class="modal-footer  justify-content-start"> -->
+                        <div class="modal-footer">
+                            <input v-if="refMode==0" type="text" class="form-control" v-model='ref_item_text'></input>
+                            <input v-if="refMode>0" :disabled="ref_list.length>1" type="text" class="form-control" v-model='ref_list[0].item_name'></input>
+                            <input v-if="refMode>1" disabled type="text" class="form-control" v-model='ref_list[1].item_name'></input>
+
+                            <button v-if="refMode==0" type="button" class="btn btn-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#confirmRefModal">Добавить</button>
+                            <button v-if="refMode==1" type="button" class="btn btn-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#confirmRefModal">Изменить</button>
+                            <button v-if="refMode>1" type="button" class="btn btn-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#confirmRefModal">Объеденить</button>
+
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal подтвердить -->
+            <div class="modal fade" id="confirmRefModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">Подтвердите
+                                <span v-if="refMode == 0">добавление новой записи</span>
+                                <span v-if="refMode == 1">изменение записи</span>
+                                <span v-if="refMode > 1">слияние записей</span> в справочнике "{{ref_name_rus}}"
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input v-if="refMode==0" disabled type="text" class="form-control" v-model='ref_item_text'></input>
+                            <input v-if="refMode>0" disabled type="text" class="form-control" v-model='ref_list[0].item_name'></input>
+                            <input v-if="refMode>1" disabled type="text" class="form-control" v-model='ref_list[1].item_name'></input>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="addRefItem()">Подтвердить</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal удалить -->
+            <div class="modal fade" id="deleteModalCasualty" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">Удалить запсь НС: #{{ca.id}}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <h5>{{ca.full_name}}</h5>
+                            <h6>{{ca.dt}}</h6>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="deleteCasualty(ca.id)">Удалить</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </article>
+        <article v-else class="row ">
+            <div class="alert alert-danger " role="alert ">
+                Нет доступа, {{login.result}}. {{login.message}}
+            </div>
+        </article>
+
+
+        </div>
+
+        <script>
+            // boot up the demo
+            var app = new Vue({
+                el: "#App ",
+                data: {
+                    casualty_id: -1,
+                    full_name: '',
+                    birth_year: 0,
+                    ref_name: 'area',
+                    ref_name_rus: '',
+                    ref_item_text: '',
+                    ref_item_id: '',
+                    ref_table: [],
+                    ref_list: [],
+                    uploadFileData: {
+                        name: ''
+                    },
+                    isNewUploadFile: false,
+                    uploadFileProgress: 0,
+                    uploadResult: '',
+                    upload_dir: '',
+                    delete_file: '',
+
+                    db: {
+                        max_casualty_id: 0,
+                        mine: [],
+                        region: [],
+                        area: [],
+                        area_dir: [],
+                        place: [],
+                        mining_flag: [],
+                        person: [],
+                        age_group: [],
+                        prof: [],
+                        degree: [],
+                        relation_flag: [],
+                        ps: [],
+                        ev: [],
+                    },
+
+                    ca: {
+                        id: -1,
+                        dt: '2022-01-01T00:00:00',
+                        mine_id: 0,
+                        region_id: 0,
+                        area_id: 0,
+                        area_dir_id: 0,
+                        place_id: 0,
+                        mining_flag_id: 0,
+                        age: 0,
+                        full_name: '',
+                        birth_year: 0,
+                        age_group_id: 0,
+                        prof_id: 0,
+                        desc_id: 0,
+                        diagnos_id: 0,
+                        degree_id: 0,
+                        group_flag: 0,
+                        end_flag: 0,
+                        event_id: 0,
+                        process_id: 0,
+                        prod_flag: 0,
+                        relation_flag_id: 0,
+                        measure_id: 0,
+                        deleted: 0,
+                        diagnos_text: ' ',
+                        desc_text: ' ',
+                        body_part_id: 0,
+                        last_editor: ''
+                    },
+                    file_act: [],
+                    file_other: [],
+                    login: {
+                        result: null,
+                        message: null,
+                        user: null,
+                        role: null,
+                        host: null
+                    },
+                    data: {
+                        "result ": "",
+                    },
+                },
+                computed: {
+                    isAccess: function() {
+                        if (!this.login.role) this.login.role = 'rm'
+                        console.log(`computed isAccess:${this.login.role}`)
+                        return ['admin', 'rm'].includes(this.login.role)
+                    },
+                    isRM: function() {
+                        return this.login.role == 'rm'
+                    },
+                    isAdmin: function() {
+                        return this.login.role == 'admin'
+                    },
+                    refMode: function() {
+                        return this.ref_list.length
+                    }
+
+                },
+                mounted() {
+                    this.logIn()
+                    this.loadData()
+                    this.casualty_id = localStorage.getItem('casualty_id')
+                    this.loadCasualty(this.casualty_id)
+                },
+                methods: {
+                    onRefItemClick(obj, row) {
+                        console.log(`onRefItemClick: ${this.ref_list}`)
+                            // console.log(row)
+                        Object.keys(this.ref_list).forEach((prop) => console.log(prop));
+                    },
+                    async logIn() {
+                        console.log("CALL logIn ")
+                        await axios
+                            .get('./data/login_ntlm.php')
+                            .then(response => (this.login = response.data));
+                    },
+                    async loadData() {
+                        console.log(`loadData: `)
+                        let url = `data/get_db.php`
+                        console.log(`url: ${url}`)
+                        await axios
+                            .get(url)
+                            .then(response => {
+                                console.log(response)
+                                this.db = response.data.db
+                                eval(`this.ref_table = this.db.${this.ref_name}`)
+
+                            })
+                    },
+                    async loadCasualty(id, offset = 0) {
+                        console.log(`loadCasualty: ${id}`)
+                        if (id > 0) {
+                            let url = `data/get_ca.php?id=${id}&offset=${offset}`
+                            console.log(`url: ${url}`)
+                            await axios
+                                .get(url)
+                                .then(response => {
+                                    console.log(response)
+                                    this.casualty_id = response.data.casualty_id
+                                    console.log(response.data.casualty_id)
+                                    console.log(response.data.ca['0'])
+                                        // if (response.data.ca.length > 0)    
+                                    // console.log(`response.data.ca.length: ${response.data.ca.length}`)
+                                    this.ca = response.data.ca['0']
+                                    this.file_act = Object.values(response.data.ca.file_act)
+                                    this.file_other = Object.values(response.data.ca.file_other)
+                                        // console.log(this.file_act.indexOf('2'))
+                                        // console.log(this.file_act[0])
+                                        // console.log(this.file_act)
+
+                                    console.log(this.ca.dt)
+                                    this.ca.dt = this.ca.dt.toString().replace(' ', 'T')
+                                    console.log(this.ca.dt)
+                                })
+                        } else {
+                            console.log(this.ca)
+                        }
+                    },
+                    async saveCasualty() {
+                        console.log(`saveCasualty: ${this.ca.id}`)
+                            // console.log(`saveCasualty: ${JSON.stringify(this.ca)}`)
+                        this.ca.last_editor = [this.login.user, this.login.role, this.login.host].join(':')
+                        await axios
+                            .post(`data/save_ca.php`, `ca=${JSON.stringify(this.ca)}`)
+                            .then(response => {
+                                console.log(response.data)
+                                console.log(`ca.id: ${this.ca.id}`)
+                                if (this.ca.id == -1) { // new
+                                    this.ca.id = response.data.casualty_id
+                                    this.casualty_id = response.data.casualty_id
+                                    this.ca.desc_id = response.data.desc_id
+                                    this.ca.diagnos_id = response.data.diagnos_id
+                                    console.log(`casualty_id: ${this.casualty_id}`)
+                                }
+                            })
+
+                    },
+                    setDate(dt) {
+                        $('#datepicker1 ').datepicker({
+                            weekStart: 1,
+                            format: 'yyyy-mm-dd ',
+                            daysOfWeekHighlighted: "6,0 ",
+                            autoclose: true,
+                            todayHighlight: true,
+                            language: 'ru '
+                        });
+                        var dt1 = new Date(dt);
+                        dt1 = new Date(dt1.getFullYear(), 0, 1);
+                        $('#datepicker1 ').datepicker("setDate ", dt1);
+                    },
+                    setEditRef(name, name_rus) {
+                        this.ref_list = []
+
+                        if (this.ref_name != name) {
+                            this.ref_name = name
+                            this.ref_name_rus = name_rus
+                            this.ref_item_text = ''
+                            eval(`this.ref_table = this.db.${name}`)
+                        }
+                        console.log(`setEditRef: ${this.ref_name}, ${this.ref_name_rus}, ${this.ref_item_text}`)
+                    },
+                    async addRefItem() {
+
+                        // <input v-if="refMode==0" disabled type="text" class="form-control" v-model='ref_item_text'></input>
+                        // <input v-if="refMode>0" disabled type="text" class="form-control" v-model='ref_list[0].item_name'></input>
+                        // <input v-if="refMode>1" disabled type="text" class="form-control" v-model='ref_list[1].item_name'></input>
+
+                        console.log(`addRefItem: ${this.ref_name_rus}, ${this.ref_name}, ${this.refMode}, ${this.ref_item_text}`)
+
+                        let url = `data/save_reference.php?ref_mode=0&ref_name=${this.ref_name}&ref_item_text=${this.ref_item_text}`
+                        console.log(`url: ${url}`)
+                        if (this.refMode == 0) {
+                            if (this.ref_item_text.length == 0)
+                                return
+                        } else if (this.refMode == 1) {
+                            url = `data/save_reference.php?ref_mode=1&ref_name=${this.ref_name}&ref_item_text=${this.ref_list[0].item_name}&ref_item_id=${this.ref_list[0].id}`
+                        } else {
+                            url = `data/save_reference.php?ref_mode=2&ref_name=${this.ref_name}&ref_item_text=${this.ref_list[0].item_name}&ref_item_id=${this.ref_list[0].id}&ref_item_text2=${this.ref_list[1].item_name}&ref_item_id2=${this.ref_list[1].id}`
+                        }
+                        console.log(`url: ${url}`)
+                        await axios
+                            .get(url)
+                            .then(response => {
+                                console.log(response.data)
+                                if (response.data.result == 'OK') {
+                                    this.loadData()
+                                    this.loadCasualty(this.casualty_id)
+                                }
+                                // eval(`if (response.data.result == 'OK') {
+                                //     if (this.ca.${this.ref_name}_id != response.data.ref_id) {
+                                //         this.ca.${this.ref_name}_id = response.data.ref_id
+                                //         this.loadData()
+                                //         this.loadCasualty(this.casualty_id)
+                                //     }
+                                // }`)
+                            })
+                    },
+                    fileInputChange() {
+                        console.log(`CALL fileInputChange: ${event.target.files[0].name}`);
+                        this.uploadFileData = event.target.files[0];
+                        this.isNewUploadFile = true;
+                        console.log(`isNewUploadFile: ${this.isNewUploadFile}, uploadFileData ${this.uploadFileData.name}`);
+                    },
+
+                    setUploadDir(upload_dir) {
+                        this.upload_dir = upload_dir
+                        console.log(`setUploadRef: ${this.upload_dir}`)
+                    },
+                    async uploadFile() {
+                        let url = `data/upload_file.php?id=${this.ca.id}&dir=${this.upload_dir}`
+                        console.log(`CALL uploadFile: ${url}`);
+                        let form = new FormData();
+                        form.append('file', this.uploadFileData);
+                        await axios.post(url, form, {
+                                onUploadProgress: (itemUpload) => {
+                                    this.uploadFileProgress = Math.round((itemUpload.loaded / itemUpload.total) * 100);
+                                }
+                            })
+                            .then(response => {
+                                console.log(response.data);
+                                this.uploadResult = response.data.result;
+                                this.uploadMessage = response.data.message;
+                                console.log(this.uploadResult);
+                                console.log(this.uploadMessage);
+                                if (this.uploadResult == "OK") {
+                                    let f = this.uploadMessage.split('\\')
+                                    console.log(`f: ${f}`)
+                                    f = f[f.length - 1]
+                                    console.log(`f: ${f}`)
+
+
+                                    if (this.upload_dir == 'act') {
+                                        this.file_act.push(f)
+                                    }
+                                    if (this.upload_dir == 'other') {
+                                        this.file_other.push(f)
+                                    }
+                                }
+                                this.isNewUploadFile = false;
+                            })
+                            .catch(error => {
+                                console.error(error);
+                            });
+
+                        this.uploadFileProgress = 0;
+                    },
+
+                    cancelUpload() {
+                        console.log(`CALL cancelUpload: ${this.uploadFileData.name}`);
+                        this.uploadFileData = {
+                            name: ''
+                        };
+                        this.isNewUploadFile = false;
+                        this.uploadResult = '';
+                    },
+                    async deleteFile(delete_file) {
+                        console.log(`CALL deleteFile: ${delete_file}`);
+                        let dir = delete_file.split('/')[2]
+                        let file = delete_file.split('/')[3]
+                        console.log(`CALL deleteFile: ${dir}`);
+                        if (dir == 'act') {
+                            console.log(`CALL deleteFile: ${file}`);
+
+                            this.file_act.splice(this.file_act.indexOf(file), 1)
+                        }
+                        if (dir == 'other') {
+                            console.log(`CALL deleteFile: ${file}`);
+
+                            this.file_other.splice(this.file_other.indexOf(file), 1)
+                        }
+
+
+                        let url = `data/delete_file.php?file_name=${delete_file}`
+                        console.log(`url: ${url}`)
+                        await axios
+                            .get(url)
+                            .then(response => {
+                                console.log(response.data)
+                            })
+
+
+                    },
+                    async deleteCasualty(id) {
+                        console.log(`deleteCasualty: ${id}`)
+                        this.loadCasualty(id, -1)
+                        let url = `data/del_casualty.php?id=${id}&last_editor=${[this.login.user, this.login.role, this.login.host].join(':')}`
+                        console.log(`url: ${url}`)
+
+                        await axios
+                            .get(url)
+                            .then(response => {
+                                console.log(response.data)
+                                if (response.data.result == 'OK') {
+                                }
+                            })
+
+                    }
+
+
+
+
+                }
+            });
+        </script>
+
+
+</body>
+
+</html>
+
+</html>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="cache-control" content="no-cache">
+
+    <title>Редактор мер</title>
+
+    <script src="assets/vue/vue.js"></script>
+    <script src="assets/axios/axios.min.js"></script>
+    <script src="assets/bootstrap-5.0.1-dist/js/bootstrap.js"></script>
+    <link href="assets/bootstrap-5.0.1-dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/bootstrap-icons-1.3.0/bootstrap-icons.css" rel="stylesheet">
+
+    <script src="assets/jquery/jquery-3.3.1.js"></script>
+    <script src="assets/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="assets/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ru.min.js"></script>
+    <link rel="stylesheet" href="assets/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" />
+    <link rel="shortcut icon" type="image/png" href="logo_ns.png">
+
+</head>
+
+<body>
+    <div id="App" class="container">
+
+
+        <nav class="navbar navbar-expand-sm navbar-dark fixed-top bg-secondary container-fluid">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="index.html">
+                    <img src="logo_ns.png" width="30" height="30" class="d-inline-block align-top" alt=""></a>
+                <div class="navbar-brand"> Редактор мер</div>
+
+                &nbsp;
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <input class="form-check-input mt-0" v-model="process_check" type="checkbox">
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" :disabled="!process_check" aria-expanded="false">
+                            {{process_name}}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                            <li v-for="ps in data.process"><a class="dropdown-item" href="#" @click="process_name=ps.process_name; process_id=ps.process_id; ">{{ps.process_name}}</a>
+                            </li>
+                        </ul>
+                    </div>
+                    &nbsp;
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                        <button class="btn btn-primary bi bi-arrow-repeat" @click="loadData()"> Обновить</button>
+                    </div>
+                    <div class="collapse navbar-collapse"></div>
+
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                        <a class="btn btn-primary bi bi-house" href="index.html"> Вернуться</a>
+                    </div>
+                    &nbsp;
+                    <strong class="text-white-50">{{login.user}}:</strong>
+                    <span class="text-white-50">{{login.role}}</span>
+
+                </div>
+
+        </nav>
+
+        <p class="row">&nbsp;</i>
+        </p>
+        <p class="row">&nbsp;</i>
+        </p>
+
+        <article class="row" v-if="login.role=='admin'">
+            <table class="table  table-striped">
+                <thead>
+                    <tr>
+                        <th colspan="6">
+                            <nav aria-label="Page navigation example">
+                                <ul class="pagination pagination-sm">
+                                    <li class="page-item" v-bind:class="{ disabled: (page == 1) }">
+                                        <a class="page-link" href="#" aria-label="Назад" @click="prevPage()">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                    <div v-for="(np, n) in pages">
+                                        <li class="page-item" v-bind:class="{ active: (np == page) }">
+                                            <a class="page-link" href="#" @click="onNewPage(np)">{{np}}</a>
+                                        </li>
+                                    </div>
+                                    <li class="page-item" v-bind:class="{ disabled: (page == pagesCount) }">
+                                        <a class="page-link" href="#" aria-label="Вперед" @click="nextPage()">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </th>
+                    </tr>
+                </thead>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th class="col-md-3">Процесс</th>
+                        <th class="col-md-3">Событие</th>
+                        <th class="col-md-5">Меры</th>
+                        <th class="col-md-1">Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(r, key) in viewList">
+                        <th>{{r.measure_id}}</th>
+                        <td>{{r.process_name}}</td>
+                        <td>{{r.event_name}}</td>
+                        <td><pre wrap>{{r.measure_text}}</pre></td>
+                        <td>
+                            <div class="btn-group" role="group" aria-label="Basic example">
+                                <!-- <button class="btn btn-primary bi bi-eye" data-bs-toggle="modal" data-bs-target="#showModal" @click="casualty = ca.id, loadCasualty(ca.id)"></button> -->
+                                <button class="btn btn-secondary bi bi-pencil-square" data-bs-toggle="modal" data-bs-target="#editModal" @click="measure=r,index=key"></button>
+                                <button class="btn btn-danger bi bi-trash"  data-bs-toggle="modal" data-bs-target="#deleteModal" @click="measure=r,index=key" @click=""></button>
+                            </div>
+
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <!-- <ul class="list-group">
+                <li class="list-group-item" v-for="check in data.checks">
+                    <div class="row">
+                        <div class="col-md-10">{{check.check_id}}, {{check.check_date}}, {{check.mine_name}}, </div>
+                        <a class="col-md-1 btn btn-primary bi bi-pencil" :href="'edit.php?check_id='+check.check_id"></a>
+                        <button class="col-md-1 btn btn-danger bi bi-trash" data-bs-toggle="modal" data-bs-target="#deleteModal" @click="check_id=check.check_id; check_date=check.check_date; mine_name=check.mine_name; "></button>
+                    </div>
+                </li>
+            </ul> -->
+        </article>
+        <article v-else class="row">
+            <div class="alert alert-danger" role="alert">
+                Нет доступа, {{login.result}}. {{login.message}}
+            </div>
+        </article>
+
+         <!-- Modal Удалить -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel">Удалить меру: #{{measureId}}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Процесс: {{measureProcess}}</h6>
+                        <h6>Событие{{measureEvent}}</h6>
+                        <pre>{{measureText}}</pre>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="deleteMeasure(measureId)">Удалить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Редактировать -->
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable  modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="showModalLabel">#{{measureId}} - {{measureProcess}}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6 class="modal-title" id="showModalLabel">{{measureEvent}}</h6>
+                        <p></p>
+                        <textarea class="form-control" id="textAreaExample2" rows="20" v-model="measureText"></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" @click="prevMeasure()"><i class="bi bi-chevron-double-left"></i> Назад</button>
+                        <button type="button" class="btn btn-outline-secondary" @click="nextMeasure()">Вперед<i class="bi bi-chevron-double-right"></i></button>
+                        <div class="col-md-1"></div>
+
+                        <button type="button" class="btn btn-primary"   data-bs-dismiss="modal" @click="saveMeasure()">Сохранить</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
+
+        <script>
+            // boot up the demo
+            var app = new Vue({
+                el: "#App",
+                computed: {
+                    measureText: {
+                        get() {
+                            let o = this.viewList[this.index]
+                            if (o)
+                                return o.measure_text
+                            else
+                                return ''
+                        },
+                        set(newMeasureText) {
+                            let o = this.viewList[this.index]
+                            if (o)
+                                o.measure_text = newMeasureText
+                            return newMeasureText
+                        }
+                    },
+                    measureProcess() {
+                        let o = this.viewList[this.index]
+                        if (o)
+                            return o.process_name
+                        else
+                            return ''
+                    },
+                    measureEvent() {
+                        let o = this.viewList[this.index]
+                        if (o)
+                            return o.event_name
+                        else
+                            return ''
+                    },
+                    measureId() {
+                        let o = this.viewList[this.index]
+                        if (o)
+                            return o.measure_id
+                        else
+                            return -1
+                    },
+                },
+                data: {
+                    new_check_date: "",
+                    check_date: "",
+                    check_id: 0,
+                    process_check: false,
+                    url_edit: "edit.php",
+                    process_name: "Добыча угля в очистном забое",
+                    process_id: 2,
+                    viewList: [{
+                        measure_id: -1,
+                        process_id: 0,
+                        event_id: 0,
+                        measure_text: '',
+                        process_name: '',
+                        event_name: ''
+                    }, ],
+                    paginationEnabled: false,
+                    paginationItemsPerPage: 10,
+                    page: 1,
+                    pages: [],
+                    pagesCount: 0,
+                    index: -1,
+                    measure: {
+                        measure_id: -1,
+                        process_id: 0,
+                        event_id: 0,
+                        measure_text: '',
+                        process_name: '',
+                        event_name: '',
+                        last_editor: ''
+                    },
+                    casualty_id: 0,
+                    login: {
+                        result: null,
+                        message: null,
+                        user: null,
+                        role: null,
+                        host: null,
+                    },
+                    data: {
+                        result: "",
+                        process: [{
+                            process_id: 0,
+                            process_name: ""
+                        }],
+                    },
+                },
+
+
+
+                mounted() {
+                    this.logIn()
+                    this.loadData()
+                },
+                methods: {
+                    async logIn() {
+                        console.log("CALL logIn")
+                        await axios
+                            .get('./data/login_ntlm.php')
+                            .then(response => (this.login = response.data));
+                    },
+                    async loadData() {
+                        console.log(`loadData: ${this.mine_name}`)
+                        let url = `data/get_measures.php`
+                        console.log(`url: ${url}`)
+
+                        if (this.process_check) url += `?process_id=${this.process_id}`
+                        await axios
+                            .get(url)
+                            .then(response => {
+                                console.log(response)
+                                this.data = response.data
+                                console.log(this.data)
+                                console.log(`this.mines: ${this.data.result}`)
+                            })
+
+                        this.recalcPages();
+                        this.onNewPage(this.page);
+
+                    },
+                    async deleteMeasure(id) {
+                        let last_editor = [this.login.user, this.login.role, this.login.host].join(':')
+                        console.log(`deleteMeasure: ${id} ${last_editor}`)
+                        url = `data/delete_measure.php?id=${id}&last_editor=${last_editor}`
+                        await axios
+                            .get(url)
+                            .then(response => {
+                                console.log(response.data)
+                                if (response.data.result == 'OK') {
+                                    this.viewList.splice(this.index, 1)
+                                }
+                            })
+
+                    },
+                    async saveMeasure() {
+                        console.log(`saveMeasure: ${this.index}`)
+                        this.viewList[this.index] = this.measure
+
+                        this.measure.last_editor = [this.login.user, this.login.role, this.login.host].join(':')
+                        console.log(`saveData: ${JSON.stringify(this.measure)}`)
+                        await axios
+                            .post(`data/save_measure.php`, `data=${JSON.stringify(this.measure)}`)
+                            .then(response => {
+                                console.log(response.data)
+                                if (response.data.result == 'OK') {
+                                    let data = response.data
+                                    this.viewList[this.index].measure_id = data.measure_id
+                                }
+                            })
+
+                    },
+                    recalcPages() {
+                        this.paginationEnabled = this.data.measures.length > this.paginationItemsPerPage;
+                        let page = 1;
+                        this.pages = [];
+                        while (page * this.paginationItemsPerPage < this.data.measures.length)
+                            this.pages.push(page++);
+                        if ((page * this.paginationItemsPerPage - this.data.measures.length) >= 0)
+                            this.pages.push(page);
+
+
+                        this.pagesCount = this.pages.length;
+                    },
+                    nextPage() {
+                        this.onNewPage(++this.page);
+                    },
+                    prevPage() {
+                        this.onNewPage(--this.page);
+                    },
+                    onNewPage(newPage) {
+                        this.page = newPage
+                        this.selectVisibleRows()
+                    },
+                    selectVisibleRows() {
+                        if (this.paginationEnabled) {
+                            const rowFirst = (this.page * this.paginationItemsPerPage) - this.paginationItemsPerPage;
+                            const rowLast = (this.page * this.paginationItemsPerPage);
+                            this.viewList = this.data.measures.slice(rowFirst, rowLast);
+                        } else
+                            this.viewList = this.data.measures.slice(0);
+                    },
+                    nextMeasure() {
+                        if (this.index < (this.paginationItemsPerPage - 1)) {
+                            this.index++
+                        } else {
+                            this.nextPage()
+                            this.index = 0
+                        }
+                    },
+                    prevMeasure() {
+                        if (this.index > 0) {
+                            this.index--
+                        } else {
+                            this.prevPage()
+                            this.index = 9
+                        }
+                    },
+
+                }
+            });
+        </script>
+
+
+</body>
+
+</html>
+
+</html>

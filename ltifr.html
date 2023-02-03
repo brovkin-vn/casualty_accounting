@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="cache-control" content="no-cache">
+
+    <title>LTIFR</title>
+
+    <script src="assets/vue/vue.js"></script>
+    <script src="assets/axios/axios.min.js"></script>
+    <script src="assets/bootstrap-5.0.1-dist/js/bootstrap.js"></script>
+    <link href="assets/bootstrap-5.0.1-dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/bootstrap-icons-1.3.0/bootstrap-icons.css" rel="stylesheet">
+
+    <script src="assets/jquery/jquery-3.3.1.js"></script>
+    <script src="assets/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="assets/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ru.min.js"></script>
+    <link rel="stylesheet" href="assets/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" />
+    <link rel="shortcut icon" type="image/png" href="logo_ns.png">
+
+</head>
+
+<body>
+    <div id="App" class="container">
+
+        <nav class="navbar navbar-expand-sm navbar-dark fixed-top bg-secondary container-fluid">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="index.html">
+                    <img src="logo_ns.png" width="30" height="30" class="d-inline-block align-top" alt=""> Редактор LTIFR
+                </a>
+                <button class="col-md-1 btn btn-secondary" @click="loadData(-1)"><i class="bi bi-chevron-double-left"></i> Назад</button>
+                <div class="col-xs-2">
+                    <input class="col-md-1 form-control" type="date" class="form-control" v-model="dt" onchange="console.log(this.value);" />
+                </div>
+                <button class="col-md-1 btn btn-secondary" @click="loadData()"><i class="bi bi-arrow-clockwise"></i> Обновить</button>
+                <button class="col-md-1 btn btn-secondary" @click="loadData(1)">Вперед <i class="bi bi-chevron-double-right"></i></button>
+
+                <div class="input-group">
+                    <div class="collapse navbar-collapse"></div>
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                        <button class="btn btn-primary bi bi-save" @click="saveData()"> Сохранить</button>
+                        <button class="btn btn-secondary bi bi-arrow-clockwise" @click="loadData()"> Отменить</button>
+                        <a class="btn btn-secondary bi bi-house " href="index.html "> Вернуться</a>
+                    </div>
+                    &nbsp;
+                    <strong class="text-white-50">{{login.user}}:</strong>
+                    <span class="text-white-50">{{login.role}}</span>
+
+                </div>
+
+        </nav>
+
+        <p class="row">&nbsp;</i>
+        </p>
+        <p class="row">&nbsp;</i>
+        </p>
+        <article class="row" v-if="isAccess">
+            <!-- <div class="row g-1">
+                <button class="col-md-1 btn btn-outline-secondary" @click="loadData(-1)"><i class="bi bi-chevron-double-left"></i> Назад</button>
+                <div class="col-md-4"></div>
+                <input class="col-md-2" type="date" class="form-control" v-model="dt" onchange="console.log(this.value);" />
+                <button class="col-md-1 btn btn-outline-secondary" @click="loadData()"><i class="bi bi-arrow-clockwise"></i> Обновить</i></button>
+                <button class="col-md-1 btn btn-outline-secondary" @click="test()"> Тест</button>
+                <div class="col-md-3"></div>
+                <button class="col-md-1 btn btn-outline-secondary" @click="loadData(1)">Вперед <i class="bi bi-chevron-double-right"></i></button>
+            </div> -->
+
+            <table class="table  table-striped align-text-tope">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Предприятие</th>
+                        <th>ФЧЧ</th>
+                        <th>ЧO</th>
+                        <th>ССЧ</th>
+                        <th>ДВПДР</th>
+                        <th>ДННСП</th>
+                        <th>ДНПЗ</th>
+                        <th>ДНОЗ</th>
+                        <th>ДННСБ</th>
+                        <!-- <th>Действие</th> -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(r, key) in ltifr">
+                        <!-- <th>{{key+1}}</th> -->
+                        <th>{{key+1}}.</th>
+                        <td>{{r.mine_name}}</td>
+                        <td><input type="text" class="form-control" :class="{'is-invalid' : isNaN(Number(r.f1.replace(',','.')))}" v-model="r.f1"></input>
+                        </td>
+                        <td><input type="text" class="form-control" :class="{'is-invalid' : isNaN(Number(r.f2.replace(',','.')))}" v-model="r.f2"></input>
+                        </td>
+                        <td><input type="text" class="form-control" :class="{'is-invalid' : isNaN(Number(r.f3.replace(',','.')))}" v-model="r.f3"></input>
+                        </td>
+                        <td><input type="text" class="form-control" :class="{'is-invalid' : isNaN(Number(r.f4.replace(',','.')))}" v-model="r.f4"></input>
+                        </td>
+                        <td><input type="text" class="form-control" :class="{'is-invalid' : isNaN(Number(r.f5.replace(',','.')))}" v-model="r.f5"></input>
+                        </td>
+                        <td><input type="text" class="form-control" :class="{'is-invalid' : isNaN(Number(r.f6.replace(',','.')))}" v-model="r.f6"></input>
+                        </td>
+                        <td><input type="text" class="form-control" :class="{'is-invalid' : isNaN(Number(r.f7.replace(',','.')))}" v-model="r.f7"></input>
+                        </td>
+                        <td><input type="text" class="form-control" :class="{'is-invalid' : isNaN(Number(r.f8.replace(',','.')))}" v-model="r.f8"></input>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <ul>
+                <li>ФЧЧ - Фактически отработанные человеко-часы</li>
+                <li>ЧО - Часы обучения</li>
+                <li>ССЧ - Среднесписочная численность работников</li>
+                <li>ДВПДР - Дни временного перевода на другую работу</li>
+                <li>ДННСП - Дни нетрудоспособности (LTAD) несчастные случаи на производстве</li>
+                <li>ДНПЗ - Дни нетрудоспособности (LTAD) профзаболевания</li>
+                <li>ДНОЗ - Дни нетрудоспособности (LTAD) общие заболевания</li>
+                <li>ДННСБ - Дни нетрудоспособности (LTAD) несчастные случаи в быту</li>
+            </ul>
+        </article>
+        <article v-else class="row">
+            <div class="alert alert-danger " role="alert ">
+                Нет доступа, {{login.result}}. {{login.message}}
+            </div>
+        </article>
+
+        </div>
+
+        <script>
+            // boot up the demo
+            var app = new Vue({
+                el: "#App ",
+                data: {
+                    aa: 'aa',
+                    dt: '1970-01-01',
+                    ltifr: [{
+                        id: -1,
+                        mine_id: 0,
+                        mine_name: '',
+                        f1: '0', // ФЧЧ - Фактически отработанные человеко-часы - actual human hours
+                        f2: '0', // ЧО - Часы обучения- training hours
+                        f3: '0', // ССЧ - Среднесписочная численность работников - Average number of employees
+                        f4: '0', // ДВПДР - Дни временного перевода на другую работу - Days of temporary transfer to another job
+                        f5: '0', // ДННСП - Дни нетрудоспособности (LTAD) несчастные случаи на производстве - Days of Incapacity accidents at work
+                        f6: '0', // ДНПЗ - Дни нетрудоспособности (LTAD) профзаболевания - occupational disease
+                        f7: '0', // ДНОЗ - Дни нетрудоспособности (LTAD) общие заболевания
+                        f8: '0', // ДННСБ - Дни нетрудоспособности (LTAD) несчастные случаи в быту
+                    }],
+
+                    login: {
+                        result: null,
+                        message: null,
+                        user: null,
+                        role: null,
+                        host: null
+                    },
+
+                },
+                computed: {
+                    isAccess: function() {
+                        console.log(`computed isAccess`)
+                        if (!this.login.role) this.login.role = 'rm'
+                        console.log(`computed isAccess:${this.login.role}`)
+                        return ['admin', 'rm'].includes(this.login.role)
+                    },
+                    isRM: function() {
+                        return this.login.role == 'rm'
+                    },
+                    isAdmin: function() {
+                        return this.login.role == 'admin'
+                    },
+                },
+                mounted() {
+                    this.logIn()
+                    console.log(`mounted: ${this.dt}`)
+                    this.dt = localStorage.getItem('dt_ltifr')
+                    console.log(`mounted: ${this.dt}`)
+
+                    if (!(this.dt) || (this.dt == 'null')) {
+                        console.log(`mounted calc dt: ${this.dt}`)
+
+                        let d = new Date()
+                        d = new Date(d.getFullYear(), d.getMonth(), 1);
+                        d = new Date(d.getTime() - (d.getTimezoneOffset() * 60 * 1000))
+                        console.log(`dt is ${d}`)
+                        console.log(`dt is ${d.toISOString()}`)
+                        this.dt = d.toISOString().split('T')[0]
+                        console.log(`dt is ${this.dt}`)
+                    }
+                    console.log(`mounted aaa: ${this.dt}`)
+
+                    this.loadData()
+
+                },
+                methods: {
+                    test() {
+                        console.log(`f1: ${this.ltifr[0].f1}, f2: ${this.ltifr[0].f2}`)
+                    },
+                    onInput(e) {
+                        console.log(e.target.innerText);
+                    },
+                    async logIn() {
+                        console.log("CALL logIn ")
+                        await axios
+                            .get('./data/login_ntlm.php')
+                            .then(response => {
+                                console.log(response.data)
+                                this.login = response.data
+                                console.log(this.login)
+                            });
+                    },
+                    trimDate() {
+                        console.log(`trimDate for: ${this.dt}`)
+                        let d = new Date(this.dt)
+                        console.log(`dddd: ${d.toISOString().split('T')[0]}`)
+                        d = new Date(d.getFullYear(), d.getMonth(), 1);
+                        d = new Date(d.getTime() - (d.getTimezoneOffset() * 60 * 1000))
+                        this.dt = d.toISOString().split('T')[0]
+                        console.log(`trimDate  to: ${this.dt}`)
+                    },
+                    async saveData() {
+                        console.log(`saveData ${this.ltifr[0].id}`)
+                        for (let i in this.ltifr) {
+                            this.ltifr[i].f1 = this.ltifr[i].f1.replace(',', '.').replace(/(?:\r\n|\r|\n|\s)/g, '')
+                            this.ltifr[i].f2 = this.ltifr[i].f2.replace(',', '.').replace(/(?:\r\n|\r|\n|\s)/g, '')
+                            this.ltifr[i].f3 = this.ltifr[i].f3.replace(',', '.').replace(/(?:\r\n|\r|\n|\s)/g, '')
+                            this.ltifr[i].f4 = this.ltifr[i].f4.replace(',', '.').replace(/(?:\r\n|\r|\n|\s)/g, '')
+                            this.ltifr[i].f5 = this.ltifr[i].f5.replace(',', '.').replace(/(?:\r\n|\r|\n|\s)/g, '')
+                            this.ltifr[i].f6 = this.ltifr[i].f6.replace(',', '.').replace(/(?:\r\n|\r|\n|\s)/g, '')
+                            this.ltifr[i].f7 = this.ltifr[i].f7.replace(',', '.').replace(/(?:\r\n|\r|\n|\s)/g, '')
+                            this.ltifr[i].f8 = this.ltifr[i].f8.replace(',', '.').replace(/(?:\r\n|\r|\n|\s)/g, '')
+                            if (isNaN(Number(this.ltifr[i].f1))) this.ltifr[i].f1 = 0;
+                            if (isNaN(Number(this.ltifr[i].f2))) this.ltifr[i].f2 = 0;
+                            if (isNaN(Number(this.ltifr[i].f3))) this.ltifr[i].f3 = 0;
+                            if (isNaN(Number(this.ltifr[i].f4))) this.ltifr[i].f4 = 0;
+                            if (isNaN(Number(this.ltifr[i].f5))) this.ltifr[i].f5 = 0;
+                            if (isNaN(Number(this.ltifr[i].f6))) this.ltifr[i].f6 = 0;
+                            if (isNaN(Number(this.ltifr[i].f7))) this.ltifr[i].f7 = 0;
+                            if (isNaN(Number(this.ltifr[i].f8))) this.ltifr[i].f8 = 0;
+                        }
+                        await axios
+                            .post(`data/save_ltifr.php`, `data=${JSON.stringify(this.ltifr)}`)
+                            .then(response => {
+                                console.log(response.data)
+                            })
+
+                    },
+                    async loadData(offset = 0) {
+                        console.log(`loadData: ${this.dt}`)
+                        let d = new Date(this.dt)
+                        console.log(`dddd: ${d.toISOString().split('T')[0]}`)
+                        d = new Date(d.getFullYear(), d.getMonth() + offset, 1);
+                        d = new Date(d.getTime() - (d.getTimezoneOffset() * 60 * 1000))
+                        this.dt = d.toISOString().split('T')[0]
+                        if (this.dt) localStorage.setItem('dt_ltifr', this.dt)
+
+
+                        let url = `data/get_ltifr.php?dt=${this.dt}`
+                        console.log(`url: ${url}`)
+                        await axios
+                            .get(url)
+                            .then(response => {
+                                console.log(response.data)
+                                this.ltifr = response.data.ltifr
+                                console.log(this.ltifr)
+
+                            })
+                    },
+                    setDate(dt) {
+                        $('#datepicker1 ').datepicker({
+                            weekStart: 1,
+                            format: 'yyyy-mm-dd ',
+                            daysOfWeekHighlighted: "6,0 ",
+                            autoclose: true,
+                            todayHighlight: true,
+                            language: 'ru '
+                        });
+                        var dt1 = new Date(dt);
+                        dt1 = new Date(dt1.getFullYear(), 0, 1);
+                        $('#datepicker1 ').datepicker("setDate ", dt1);
+                    },
+                }
+            });
+        </script>
+
+</body>
+
+
+</html>

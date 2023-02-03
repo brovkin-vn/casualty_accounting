@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="cache-control" content="no-cache">
+    
+    <title>Формирование карты рисков</title>
+
+    <script src="assets/vue/vue.js"></script>
+    <script src="assets/axios/axios.min.js"></script>
+    <script src="assets/bootstrap-5.0.1-dist/js/bootstrap.js"></script>
+    <link href="assets/bootstrap-5.0.1-dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/bootstrap-icons-1.3.0/bootstrap-icons.css" rel="stylesheet">
+
+    <script src="assets/jquery/jquery-3.3.1.js"></script>
+    <script src="assets/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="assets/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ru.min.js"></script>
+    <link rel="stylesheet" href="assets/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" />
+    <link rel="shortcut icon" type="image/png" href="logo_ns.png">
+
+</head>
+
+<body>
+    <div id="App" class="container mw-100">
+
+
+        <nav class="navbar navbar-expand-sm navbar-dark fixed-top bg-secondary container-fluid">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="index.html">
+                    <img src="logo_ns.png" width="30" height="30" class="d-inline-block align-top" alt="">
+                </a>
+                <div class="navbar-brand">Формирование карты рисков</div>
+
+
+                &nbsp;
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <input class="form-check-input mt-0" v-model="mine_check" type="checkbox">
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" :disabled="!mine_check">
+                              {{mine_name}}
+                            </button>
+                        <ul class="dropdown-menu" style="overflow-y:auto; max-height:80vh">
+                            <li v-for="(mine, key) in mines "><button class="dropdown-item" @click="mine_name=mine.mine_name; mine_id=mine.id">{{mine.mine_name}}</button></li>
+                        </ul>
+                    </div>
+                    <div class="input-group-text">
+                        <input class="form-check-input mt-0" v-model="dt1_check" type="checkbox">
+                    </div>
+                    <div class="btn-group date" data-provide="datepicker1" id="datepicker1">
+                        <input type="text" class="form-control" id="dt1" :disabled="!dt1_check"></input>
+                        <div class="input-group-addon"></div>
+                    </div>
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                        <button class="btn btn-primary bi bi-arrow-repeat" @click="loadData()"> Обновить</button>
+                    </div>
+
+                </div>
+                &nbsp;
+
+
+                <div class="input-group ">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                          {{prof_name}}
+                        </button>
+
+                        <ul class="dropdown-menu" style="overflow-y:auto; max-height:80vh">
+                            <li v-for="(prof, key) in prof_sap_names "><button class="dropdown-item" @click="prof_name=prof.prof_sap_name">{{prof.prof_sap_name}}</button></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="input-group" v-if="filter_flag==1">
+                            <button class=" btn btn-secondary bi bi-funnel" @click="filter_flag=0"></button>
+                        </div>
+
+                        <div class="input-group " v-else>
+                            <button class="btn btn-secondary bi bi-x-square" @click="clearFilterProf()"></button>
+                            <button class="btn btn-secondary bi bi-search" @click="filterProf()"></button>
+                            <input class="form-control" type="text" placeholder="текст для поиска профессии" v-model="filter_text">
+                        </div>
+                    </div>
+
+
+                    <div class="btn-group " role="group " aria-label="Basic example ">
+                        <button class="btn btn-primary btn-sm bi bi-eye" data-bs-toggle="modal" data-bs-target="#showModal" @click="loadCard() "> Смотреть</button>
+                        <a class="btn btn-secondary bi bi-download" download :href="downloadURL"> Скачать<a>
+                        <a class="btn btn-secondary bi bi-house " href="index.html "> Вернуться</a>
+                    </div>
+                    &nbsp;
+                    <strong class="text-white-50 ">{{login.user}}:</strong>
+                    <span class="text-white-50 ">{{login.role}}</span>
+                </div>
+            </div>
+        </nav>
+
+        <div>
+            <p class="row ">&nbsp;
+            </p>
+            <p class="row ">&nbsp;
+            </p>
+
+        </div>
+        <article class="row col-md-12 mw-100 " v-if="login.role=='admin' ">
+            <div class="col-md-3 mw-100 ">
+                <h6 class="text-secondary ">Список профессий, для карты</h6>
+                <hr></hr>
+                <div class=" p-0 m-1 border border-primary rounded " v-for="(prof, index) in prof_names ">
+                    <button type="button " class="btn-close btn-sm " @click="fromCardProfList(index) "></button>
+                    <span class="text-primary ">{{prof}}</span>
+                </div>
+            </div>
+
+            <div class="col-md-9 ">
+
+                <div>
+                    <button v-for="(prof, col) in data.profs_all " class="btn btn-outline-secondary btn-sm col-md-2 " :title="prof.prof_name " @click="toCardProfList(prof) ">
+                        {{truncProfName(prof.prof_name)}} 
+                   </button>
+                </div>
+
+                <hr></hr>
+                <div v-for="(profs, row) in profs2d ">
+                    <button v-for="(prof, col) in profs " class="btn btn-outline-secondary btn-sm col-md-2 " :title="prof.prof_name " @click="toCardProfList(prof) ">
+                        {{truncProfName(prof.prof_name)}} 
+                   </button>
+                </div>
+            </div>
+
+        </article>
+
+        <article v-else class=" row ">
+            <div class="alert alert-danger " role="alert ">
+                Нет доступа, {{login.result}}. {{login.message}}
+            </div>
+        </article>
+
+        <!-- Modal Показать -->
+        <div class="modal fade" id="showModal" tabindex="-1" aria-labelledby="showModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-xl mw-100">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="showModalLabel">{{dt}} {{prof_name}}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table  table-striped">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th class="col-md-2">Процесс</th>
+                                    <th class="col-md-2">Событие</th>
+                                    <th class="col-md-3">Меры</th>
+                                    <th>Пострадало</th>
+                                    <th class="col-md-1">Дата</th>
+                                    <th>Лет</th>
+                                    <th>Тяжесть</th>
+                                    <th colspan="2">Оценка</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(r, n) in card">
+                                    <th>{{n+1}}</th>
+                                    <td>{{r.risk}}</td>
+                                    <td>{{r.risk2}}</td>
+                                    <td><pre wrap>{{r.measure_text}}</pre></td>
+                                    <td>{{r.cnt}}</td>
+                                    <td>{{r.last_dt}}</td>
+                                    <td>{{r.full_years}}</td>
+                                    <td>{{r.degree_name}}</td>
+                                    <td :style="{ background: r.score_color}">{{r.score}}</td>
+                                    <td>{{r.score_text}}</td>
+                                </tr>
+                            </tbody>
+
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <a class="btn btn-success bi bi-download" download :href="downloadURL"> Скачать</a>
+                        <button type="button" class="btn btn-secondary bi bi-x-square" data-bs-dismiss="modal"> Закрыть</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+
+    <script>
+        // boot up the demo
+        var app = new Vue({
+            el: "#App ",
+            data: {
+                prof_id: 0,
+                filter_flag: 1,
+                filter_text: 'рабочий',
+                prof_name: 'Горнорабочий подземный',
+                mine_name: 'Алардинская',
+                mine_id: 2,
+                dt: ' ',
+                prof_names: [],
+                prof_sap_names: [],
+                mine_check: 0,
+                dt1_check: 0,
+                mines: [],
+                prof_ids: [],
+                card: [{
+                    risk: ' ',
+                    risk2: ' ',
+                    cnt: 0,
+                    last_dt: ' ',
+                    full_years: ' ',
+                    degree_name: ' ',
+                    max_degree_value: 0,
+                    score_char: ' ',
+                    score: ' ',
+                    score_color: ' ',
+                    score_text: ' '
+                }],
+                login: {
+                    result: null,
+                    message: null,
+                    user: null,
+                    role: null
+                },
+                profs2d: [],
+                data: {
+                    result: " ",
+                    profs: [{
+                        "prof_id ": 0,
+                        "prof_name ": " "
+                    }]
+                },
+            },
+            computed: {
+                downloadURL() {
+                    let url = `data/get_card_xlsx.php?dt=${this.dt}&prof=${this.prof_name}&ids=${this.prof_ids}&mine_name=${this.mine_name}`
+                    console.log(`getDownloadURL: ${url}`)
+                    return url
+                },
+            },
+            mounted() {
+                this.logIn()
+                this.getFilter()
+                this.loadData()
+            },
+            methods: {
+                async logIn() {
+                    console.log("CALL logIn ")
+                    await axios
+                        .get('./data/login_ntlm.php ')
+                        .then(response => (this.login = response.data));
+                },
+                async loadData() {
+                    console.log(`loadData: ${this.mine_name}`)
+                    this.setFilter()
+                    let url = `data/get_profs.php?mine_check=${Number(this.mine_check)}&dt1_check=${Number(this.dt1_check)}`
+                    if (this.mine_check) url += `&mine_id=${this.mine_id}`
+                    if (this.dt1_check) url += `&dt1=${dt1.value}`
+                    console.log(`url: ${url}`)
+                    await axios
+                        .get(url)
+                        .then(response => {
+                            console.log(response)
+                                // this.data = JSON.parse(response.data.replace(/[\ufeff|\u000D|\u000A]/g, " "))
+                            this.data = response.data
+                                // console.log(this.data)
+                            this.profs2d = []
+                            while (this.data.profs.length)
+                                this.profs2d.push(this.data.profs.splice(0, 6));
+                            console.log(this.profs2d)
+                            this.mines = [...this.data.mines]
+                            this.prof_sap_names = [...this.data.profs_sap]
+                            this.prof_name = this.prof_sap_names[0].prof_sap_name
+                                // this.mine_id = 2
+                                // this.mine_name = this.mines[this.mine_id].mine_name
+                        })
+                    this.dt = new Date()
+                    this.dt = this.dt.toISOString().split('T')[0]
+
+                },
+                filterProf() {
+                    console.log(`filterProf: ${this.filter_text}`)
+                    this.prof_sap_names = this.data.profs_sap.filter((element) => {
+                        return element.prof_sap_name.toLowerCase().includes(this.filter_text.toLowerCase())
+                    })
+                    this.prof_name = this.prof_sap_names[0].prof_sap_name
+                },
+                clearFilterProf() {
+                    this.filter_flag = 1
+                    this.prof_sap_names = [...this.data.profs_sap]
+                    // this.prof_name = this.prof_sap_names[0].prof_sap_name
+                },
+                truncProfName(s) {
+                    let cat_index = 25
+                    if (s.length > cat_index)
+                        s = s.substr(0, cat_index - 2) + '... '
+                    return s
+                },
+                toCardProfList(prof) {
+                    console.log(`toCardProfList: ${prof.prof_name}`)
+                    this.prof_names.push(prof.prof_name)
+                    this.prof_names = Array.from(new Set(this.prof_names))
+                    this.prof_ids.push(parseInt(prof.prof_id))
+                    this.prof_ids = Array.from(new Set(this.prof_ids))
+                    console.log(this.prof_names)
+                },
+                fromCardProfList(index) {
+                    console.log(`toCardProfList: ${index}`)
+                    this.prof_names.splice(index, 1)
+                    this.prof_ids.splice(index, 1)
+                },
+                async loadCard() {
+                    let ids = this.prof_ids.join(',')
+                    console.log(`loadCard: ${ids}`)
+
+                    let url = `data/get_card_json.php?ids=${ids}&dt1_check=${Number(this.dt1_check)}&mine_check=${Number(this.mine_check)}`
+                    if (this.mine_check) url += `&mine_id=${this.mine_id}`
+                    if (this.dt1_check) url += `&dt1=${dt1.value}`
+
+                    if (this.mine_check) url += `&mine_id=${this.mine_id}`
+                    console.log(`url: ${url}`)
+
+                    await axios
+                        .get(url)
+                        .then(response => {
+                            console.log(response)
+                            this.card = response.data.card
+                            console.log(this.card)
+                            this.dt = new Date()
+                            this.dt = this.dt.toISOString().split('T')[0]
+                        })
+                },
+                getFilter() {
+                    this.mine_check = !!parseInt(localStorage.getItem('card.mine_check'))
+                    this.dt1_check = !!parseInt(localStorage.getItem('card.dt1_check'))
+                    this.mine_id = localStorage.getItem('card.mine_id')
+                    this.mine_name = localStorage.getItem('card.mine_name')
+                    let dt1 = localStorage.getItem('card.dt1')
+
+                    if (this.mine_id == null) this.mine_id = 2
+                    if (this.mine_name == null) this.mine_name = 'Алардинскаяя'
+
+                    console.log(`getFilter: ${dt1}`)
+
+
+                    $('#datepicker1').datepicker({
+                        weekStart: 1,
+                        format: 'yyyy-mm-dd',
+                        daysOfWeekHighlighted: "6,0",
+                        autoclose: true,
+                        todayHighlight: true,
+                        language: 'ru'
+                    });
+
+                    if (dt1) {
+                        $('#datepicker1').datepicker("setDate", dt1);
+                    } else {
+                        $('#datepicker1').datepicker("setDate", new Date(new Date().getFullYear() - 10, 0, 1));
+                    }
+                },
+
+                setFilter() {
+                    console.log(`setFilter - dt1: ${dt1.value}, mine_check: ${this.mine_check}, mine_id: ${this.mine_id}`)
+                    localStorage.setItem('card.dt1', dt1.value)
+                    localStorage.setItem('card.dt1_check', Number(this.dt1_check))
+                    localStorage.setItem('card.mine_check', Number(this.mine_check))
+                    localStorage.setItem('card.mine_id', this.mine_id)
+                    localStorage.setItem('card.mine_name', this.mine_name)
+                },
+                getDownloadURL() {
+                    let url = `data/get_card_xlsx.php?dt=${this.dt}&prof=${this.prof_name}&ids=${this.prof_ids}&mine_name=${this.mine_name}`
+                    console.log(`getDownloadURL: ${url}`)
+                    return url
+                },
+
+
+
+
+            }
+        });
+    </script>
+
+
+</body>
+
+</html>

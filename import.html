@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="cache-control" content="no-cache">
+
+    <title>Импорт НС</title>
+
+    <script src="assets/vue/vue.js"></script>
+    <script src="assets/axios/axios.min.js"></script>
+    <script src="assets/bootstrap-5.0.1-dist/js/bootstrap.js"></script>
+    <link href="assets/bootstrap-5.0.1-dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/bootstrap-icons-1.3.0/bootstrap-icons.css" rel="stylesheet">
+
+    <script src="assets/jquery/jquery-3.3.1.js"></script>
+    <script src="assets/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="assets/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ru.min.js"></script>
+    <link rel="stylesheet" href="assets/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" />
+    <link rel="shortcut icon" type="image/png" href="logo_ns.png">
+
+</head>
+
+<body>
+    <div id="App" class="container">
+
+
+        <nav class="navbar navbar-expand-sm navbar-dark fixed-top bg-secondary container-fluid">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="index.html">
+                    <img src="logo_ns.png" width="30" height="30" class="d-inline-block align-top" alt=""> Импорт НС </a>
+
+
+                <div class="btn-group date" data-provide="datepicker1" id="datepicker1">
+                    <input type="text" class="form-control" id="dt1"></input>
+                    <div class="input-group-addon"></div>
+                </div>
+                &nbsp;
+                <div class="btn-group date" data-provide="datepicker2" id="datepicker2">
+                    <input type="text" class="form-control" id="dt2"></input>
+                    <div class="input-group-addon"></div>
+                </div>
+                &nbsp;
+
+                <i class="bi bi-body-text"></i>
+                <div class="input-group">
+                    &nbsp;
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                        <button class="btn btn-primary bi bi-arrow-repeat" @click="loadData()"> Обновить </button>
+                    </div>
+
+                    <div class="collapse navbar-collapse"></div>
+
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                        <a class="btn btn-primary bi bi-house" href="index.html"> Вернуться</a>
+                    </div>
+
+                    &nbsp;
+                    <strong class="text-white-50">{{login.user}}:</strong>
+                    <span class="text-white-50">{{login.role}}</span>
+
+                </div>
+
+        </nav>
+        <p class="row">&nbsp;</i>
+        </p>
+        <p class="row">&nbsp;</i>
+        </p>
+
+
+        <table class="table  table-striped">
+            <thead>
+                <tr>
+                    <th colspan="7">
+                    </th>
+                </tr>
+            </thead>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th class="col-md-2">Дата</th>
+                    <th>Предпритие</th>
+                    <th>Участок</th>
+                    <th>ФИО</th>
+                    <th>Тяжесть</th>
+                    <th class="col-md-2">Действие </th>
+
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(ca, key) in casualties">
+                    <th>{{ca.id}}</th>
+                    <!-- <td>{{ca.dt.substr(0,16)}}</td> -->
+                    <td>{{ca.dt}}</td>
+                    <td>{{ca.mine_name}}</td>
+                    <td>{{ca.area_name}}</td>
+                    <td>{{ca.en}}</td>
+                    <td>{{ca.level_name}}</td>
+                    <td>
+                        <div class="btn-group" role="group" aria-label="Basic example">
+                            <button v-if="ca.feature == 0" class="btn btn-primary bi bi-box-arrow-down-left" data-bs-toggle="modal" data-bs-target="#showModal" @click="modal_action='imp';flash=ca"></button>
+                            <button v-if="ca.feature == 1" class="btn btn-success bi bi-arrow-repeat" data-bs-toggle="modal" data-bs-target="#showModal" @click="modal_action='imp';flash=ca"></button>
+                            <!-- <button class="btn btn-danger bi bi-trash" data-bs-toggle="modal" data-bs-target="#showModal" @click="modal_action='del';flash=ca"></button> -->
+                        </div>
+
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Modal Показать -->
+        <div class="modal fade" id="showModal" tabindex="-1" aria-labelledby="showModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable  modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="showModalLabel">{{flash.dt.substr(0,16)}} {{flash.level_name}} </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul>
+                            <li><b># {{flash.id}}</b></li>
+                            <li>{{flash.en}} </li>
+                            <li>возраст - {{flash.age}}</li>
+                            <li>{{flash.mine_name}} </li>
+                            <li>{{flash.area_name}}</li>
+                            <li>{{flash.place_name}}</li>
+                            <li>{{flash.process_name}}</li>
+                            <li>{{flash.risk_name}}</li>
+                            <li>{{flash.desc_text}}</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button v-if="modal_action == 'imp'" type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="importCasualty(flash)">Импорт</button>
+                        <button v-if="modal_action == 'del'" type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="deleteCasualty(flash)">Удалить</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        </div>
+
+        <script>
+            // boot up the demo
+            var app = new Vue({
+                el: "#App",
+                data: {
+                    modal_action: '',
+                    casualties: [],
+                    flash: {
+                        id: null,
+                        dt: '',
+                        en: '',
+                        age: 0,
+                        mine_name: null,
+                        area_name: null,
+                        place_name: null,
+                        level_name2: null,
+                        level_name: null,
+                        risk_name: null,
+                        process_name: null,
+                        desc_text: null
+                    },
+                    mines: {},
+                    login: {
+                        result: null,
+                        message: null,
+                        user: null,
+                        role: null
+                    },
+                },
+                mounted() {
+                    this.logIn()
+                    this.setDates()
+                    this.loadData()
+                        // this.mine_name = this.data.mines[0].mine_name
+                        // console.log(`mounted: ${this.data.mines[0].mine_id}`)
+                },
+                methods: {
+                    async logIn() {
+                        console.log("CALL logIn")
+                        await axios
+                            .get('./data/login_ntlm.php')
+                            .then(response => {
+                                this.login = response.data
+                                console.log(response.data)
+                                console.log(this.login)
+                            });
+                    },
+                    async loadData() {
+                        // let url = `data/import_ms.php?dt1=${$('#dt1').val()}&dt2=${$('#dt2').val()}`
+                        let url = `data/import_ms.php?dt1=${dt1.value}&dt2=${dt2.value}`
+                        // url = `data/import_ms.php?dt1=${dt1.value}&dt2=${dt2.value}`
+                        url = `http://pnoc-server9:9999/import_ms.php?dt1=${dt1.value}&dt2=${dt2.value}`
+
+                        console.log(`loadData: ${url}`)
+                        await axios
+                            .post(url)
+                    .then(response => {
+                        console.log(response)
+                        this.casualties = response.data.casualties
+                        this.mines = response.data.mines
+                        console.log(this.data)
+                    })
+
+                    // this.recalcPages();
+                    // this.onNewPage(this.page);
+
+                },
+                async deleteCasualty(ca) {
+                    console.log(`deleteCasualty: ${ca.id} ${this.casualties.indexOf(ca)}`)
+                    await axios
+                        .get(`./data/import_del.php?id=${this.casualties}`)
+                        .then(response => {
+                            console.log(response.data)
+                            if (response.data.result == 'OK') {
+                                this.casualties.splice(this.casualties.indexOf(ca), 1)
+                            }
+                        });
+                },
+                test(ca) {
+                    console.log(`test: ${JSON.stringify(ca.id)} `)
+                    this.casualties.splice(this.casualties.indexOf(ca), 1)
+                },
+                async importCasualty(ca) {
+                    // console.log(`importCasualty: ${JSON.stringify(ca.place_name)} `)
+                    // console.log(`importCasualty: ${ca.place_name} `)
+                    console.log(`importCasualty: ${JSON.stringify(ca.id)} `)
+                    // console.log(`importCasualty: ${JSON.stringify(ca).replaceAll('+','%2B')} `)
+                    await axios
+                        .post(`./data/import_mov.php`, `ca=${JSON.stringify(ca).replaceAll('+','%2B')}`)
+                        .then(response => {
+                            console.log(response.data)
+                            if (response.data.result == 'OK') {
+                                console.log(`delete indexOf: ${this.casualties.indexOf(ca)}`)
+                                this.casualties.splice(this.casualties.indexOf(ca), 1)
+                                console.log(`delete indexOf: ${this.casualties.indexOf(ca)}`)
+                            }
+                        });
+
+                },
+
+                setDates() {
+                    $('#datepicker1').datepicker({
+                        weekStart: 1,
+                        format: 'yyyy-mm-dd',
+                        daysOfWeekHighlighted: "6,0",
+                        autoclose: true,
+                        todayHighlight: true,
+                        language: 'ru'
+
+                    });
+
+                    $('#datepicker1').datepicker("setDate", new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1));
+
+                    $('#datepicker2').datepicker({
+                        weekStart: 1,
+                        format: 'yyyy-mm-dd',
+                        daysOfWeekHighlighted: "6,0",
+                        autoclose: true,
+                        todayHighlight: true,
+                        language: 'ru'
+                    });
+                    $('#datepicker2').datepicker("setDate", new Date());
+
+                },
+
+
+            }
+            });
+        </script>
+
+
+</body>
+
+</html>
