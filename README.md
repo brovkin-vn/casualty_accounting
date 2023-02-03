@@ -2,4 +2,4 @@
 
 ### Скриншоты проекта
 
-* [screenshots]( ./gitscreenshots )
+* [screenshots]( ./tree/main/screenshots )
